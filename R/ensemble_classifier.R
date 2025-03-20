@@ -107,7 +107,9 @@ train_selection_ensemble <- function(data, errors, params, nrounds) {
 #' @param newdata The feature matrix, one row per series
 #' @export
 predict_selection_ensemble <- function(model, newdata) {
-  pred <- stats::predict(model, newdata, outputmargin = TRUE, reshape=TRUE)
+  #pred <- stats::predict(model, newdata, outputmargin = TRUE, reshape=TRUE)
+  pred <- stats::predict(model, xgboost::xgb.DMatrix(as.matrix(newdata)),
+                         outputmargin = TRUE, reshape=TRUE)
   pred <- t(apply( pred, 1, softmax_transform))
   pred
 }
@@ -136,7 +138,10 @@ predict_fforma <- function(model, newdata) {
 #but this is also a function to be used with *apply type functions
 #' @export
 predict_weights_meta <- function(seriesentry, model) {
-  pred <- stats::predict(model, as.matrix(seriesentry$features), outputmargin = TRUE, reshape=TRUE)
+  #pred <- stats::predict(model, as.matrix(seriesentry$features), outputmargin = TRUE, reshape=TRUE)
+  pred <- stats::predict(model,
+                         xgboost::xgb.DMatrix(as.matrix(seriesentry$features)),
+                         outputmargin = TRUE, reshape=TRUE)
   pred <- t(apply( pred, 1, softmax_transform))
   seriesentry$weights <- pred
   seriesentry
