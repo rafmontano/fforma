@@ -11,9 +11,9 @@ select/combine different forecast models.
 More information about metalearning for forecasting, read/cite the
 paper:
 
-  - [FFORMA: Feature-based Forecast Model Averaging (To appear in
-    International Journal of
-    Forecasting)](https://robjhyndman.com/publications/fforma/)
+- [FFORMA: Feature-based Forecast Model Averaging (To appear in
+  International Journal of
+  Forecasting)](https://robjhyndman.com/publications/fforma/)
 
 This package came out of the FFORMA method presented to the M4
 forecasting competition, but has been improved and no longer can be used
@@ -40,7 +40,7 @@ Then the package can then be installed:
 
 ``` r
 #install.packages("devtools")
-devtools::install_github("pmontman/fforma")
+devtools::install_github("rafmontano/fforma")
 ```
 
 ## Usage
@@ -96,7 +96,7 @@ crossvalidation by temporal holdout for training).
 fforma_forec <- forecast_metalearning(fforma_fit, ts_dataset)
 ```
 
-Thats’ it, two lines of code\! If the dataset we forecast has the `$xx`
+Thats’ it, two lines of code! If the dataset we forecast has the `$xx`
 component in its elements, fforma will use it as the ‘true’ future
 values of each series `$x` and calculate the OWA, MASE and SMAPE
 forecast errors.

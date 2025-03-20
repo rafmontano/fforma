@@ -47,7 +47,7 @@ Then the package can then be installed:
 
 ```{r eval=FALSE}
 #install.packages("devtools")
-devtools::install_github("pmontman/fforma")
+devtools::install_github("rafmontano/fforma")
 ```
 
 
