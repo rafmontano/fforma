@@ -59,7 +59,8 @@ train_metalearning <- function(train_dataset, forec_methods = M4_forec_methods()
 
   train_dataset <- chunk_xapply(train_dataset, chunk_size, save_foldername, "train_call",
                                 future.apply::future_lapply,
-                                train_proc, forec_methods)
+                                train_proc, forec_methods,
+                                future.seed = TRUE)  # ✅ Fix: Ensures parallel-safe RNG
 
   train_dataset <- process_owa_errors(train_dataset)
 
@@ -113,7 +114,8 @@ forecast_metalearning <- function(model, new_dataset,
 
   new_dataset <- chunk_xapply(new_dataset, chunk_size, save_foldername, "forec_call",
                future.apply::future_lapply,
-               forec_steps, model)
+               forec_steps, model,
+               future.seed = TRUE)  # ✅ Fix: Ensures parallel-safe RNG
 
   owa_errors <- NULL
   if (!is.null(new_dataset[[1]]$xx)) {
