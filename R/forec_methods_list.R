@@ -164,7 +164,6 @@ naive2_forec <- function(x, h) {
   }
 
   return(naive2_forec_result)
-
 }
 
 # naive2_forec <- function(x, h) {
