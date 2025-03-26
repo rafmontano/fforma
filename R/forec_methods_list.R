@@ -112,21 +112,78 @@ SeasonalityTest <- function(input, ppy) {
 naive2_forec <- function(x, h) {
   input <- x
   fh <- h
-  #Estimate seasonaly adjusted time series
+
+  # Estimate seasonally adjusted time series
   ppy <- stats::frequency(input)
   ST <- FALSE
   if (ppy > 1) {
     ST <- SeasonalityTest(input, ppy)
   }
+
   if (ST == TRUE) {
-    Dec <- stats::decompose(input, type = "multiplicative")
-    des_input <- input / Dec$seasonal
-    SIout <-
-      utils::head(rep(Dec$seasonal[(length(Dec$seasonal) - ppy + 1):length(Dec$seasonal)], fh), fh)
-  } else{
+    Dec <- tryCatch(
+      stats::decompose(input, type = "multiplicative"),
+      error = function(e) return(NULL)
+    )
+
+    if (!is.null(Dec)) {
+      des_input <- input / Dec$seasonal
+      SIout <- utils::head(rep(Dec$seasonal[(length(Dec$seasonal) - ppy + 1):length(Dec$seasonal)], fh), fh)
+    } else {
+      des_input <- input
+      SIout <- rep(1, fh)
+    }
+  } else {
     des_input <- input
     SIout <- rep(1, fh)
   }
 
-  forecast::naive(des_input, h=fh)$mean*SIout
+  # ✅ Attempt to forecast using naive2
+  naive2_forec_result <- tryCatch(
+    forecast::naive(des_input, h = fh)$mean * SIout,
+    error = function(e) return(NA)
+  )
+
+  # ✅ Step 2: If NA values persist, attempt **FFORMA's snaive_forec**
+  if (anyNA(naive2_forec_result)) {
+    snaive_forec_result <- tryCatch(
+      snaive_forec(des_input, fh),  # ✅ Call **FFORMA's snaive_forec** instead of `forecast::snaive`
+      error = function(e) return(NA)
+    )
+    naive2_forec_result <- ifelse(is.na(naive2_forec_result), snaive_forec_result, naive2_forec_result)
+  }
+
+  # ✅ Step 3: If still NA, fall back to last observed value (basic naive)
+  if (anyNA(naive2_forec_result)) {
+    naive2_forec_result <- rep(tail(des_input, 1), fh) * SIout
+  }
+
+  # ✅ Step 4: Final NA Check & Replace with Mean if necessary
+  if (anyNA(naive2_forec_result)) {
+    naive2_forec_result[is.na(naive2_forec_result)] <- mean(des_input, na.rm = TRUE)
+  }
+
+  return(naive2_forec_result)
 }
+
+# naive2_forec <- function(x, h) {
+#   input <- x
+#   fh <- h
+#   #Estimate seasonaly adjusted time series
+#   ppy <- stats::frequency(input)
+#   ST <- FALSE
+#   if (ppy > 1) {
+#     ST <- SeasonalityTest(input, ppy)
+#   }
+#   if (ST == TRUE) {
+#     Dec <- stats::decompose(input, type = "multiplicative")
+#     des_input <- input / Dec$seasonal
+#     SIout <-
+#       utils::head(rep(Dec$seasonal[(length(Dec$seasonal) - ppy + 1):length(Dec$seasonal)], fh), fh)
+#   } else{
+#     des_input <- input
+#     SIout <- rep(1, fh)
+#   }
+#
+#   forecast::naive(des_input, h=fh)$mean*SIout
+# }
