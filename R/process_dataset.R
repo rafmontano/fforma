@@ -2,18 +2,18 @@
 #' @export
 calc_mase_smape_errors <- function(serielement) {
   insample <- serielement$x
-
   ff <- serielement$ff
 
-  frq <- max(stats::frequency(insample), 1) # Ensure frequency is at least 1
+  frq <- stats::frequency(insample)
   insample <- as.numeric(insample)
   outsample <- as.numeric(serielement$xx)
-  # Compute MASE denominator safely
+
+  # ✅ Handle MASE denominator to prevent division by zero or NA
   masep <- mean(abs(utils::head(insample, -frq) - utils::tail(insample, -frq)), na.rm = TRUE)
 
-  # 🚨 Handle division-by-zero by replacing with a small constant
+  # 🔹 Ensure masep is not zero or NA to avoid Inf/NaN in division
   if (is.na(masep) || masep == 0) {
-    masep <- 1e-6 # Small constant to avoid Inf/NaN issues
+    masep <- 1e-6 # Small constant to avoid division by zero
   }
 
   repoutsample <- matrix(
@@ -23,16 +23,21 @@ calc_mase_smape_errors <- function(serielement) {
 
   smape_err <- 200 * abs(ff - repoutsample) / (abs(ff) + abs(repoutsample))
 
+  # ✅ Handle NA values in SMAPE gracefully
   if (anyNA(smape_err)) {
-    warning("Invalid values when calculating SMAPE error, setting them to the mean error")
-    smape_err[is.na(smape_err)] <- mean(smape_err, na.rm = TRUE)
+    smape_err[is.na(smape_err)] <- mean(smape_err, na.rm = TRUE) # Use mean if some values exist
+    if (all(is.na(smape_err))) {
+      smape_err[is.na(smape_err)] <- 0 # Fallback to zero if all are NA
+    }
   }
-  mase_err <- abs(ff - repoutsample) / masep
+
+  mase_err <- abs(ff - repoutsample) / masep # Safe division with adjusted masep
 
   serielement$smape_err <- smape_err
   serielement$mase_err <- mase_err
   serielement
 }
+
 
 # this function goes over the dataset
 #' @export
